@@ -1,0 +1,11 @@
+.env
+!.env.example
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+node_modules/
+.next/
+dist/
+pgdata/
+.env.local

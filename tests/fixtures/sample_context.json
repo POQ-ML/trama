@@ -1,0 +1,19 @@
+{
+  "user": {
+    "id": "user-001",
+    "name": "Estudante Fictícia",
+    "course": "Engenharia de Software",
+    "semester": 2
+  },
+  "source": {
+    "id": "source-001",
+    "title": "Introdução a Bancos de Dados — cap. 1",
+    "url": "https://example.com/bd-cap1"
+  },
+  "event": {
+    "type": "study_session",
+    "duration_minutes": 45,
+    "topic": "modelagem relacional",
+    "at": "2026-10-05T12:00:00Z"
+  }
+}
