@@ -2,72 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Google Fonts: Geist + Patrick Hand ─────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Patrick+Hand&display=swap');
+
+/* ─── Design System Tokens ───────────────────────────────────────────────── */
 :root {
-  color-scheme: dark;
+  /* cores */
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-muted: #f5f5f5;
+  --surface-tabs: #f0f0f0;
+  --ink: #0a0a0a;
+  --ink-hover: #262626;
+  --muted: #737373;
+  --border: #d4d4d4;
+  --border-soft: #e5e5e5;
+  --border-dashed: #a3a3a3;
+  --accent: #0a0a0a;
+
+  /* forma */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+
+  /* sombras sólidas */
+  --shadow-sm: 2px 2px 0 var(--ink);
+  --shadow-md: 3px 3px 0 var(--ink);
+  --shadow-lg: 4px 4px 0 var(--ink);
+  --shadow-logo: 2px 2px 0 #a3a3a3;
+  --shadow-tab: 0 1px 2px rgba(0, 0, 0, 0.18), 0 0 0 1px #d4d4d4;
+
+  /* tipografia */
+  --font-ui: 'Geist', sans-serif;
+  --font-hand: 'Patrick Hand', cursive;
+
+  /* ── Mapeamento shadcn/ui ───────────────────────────────────────────────── */
+  --background: 0 0% 98%;        /* #fafafa */
+  --foreground: 0 0% 4%;         /* #0a0a0a */
+  --card: 0 0% 100%;             /* #ffffff */
+  --card-foreground: 0 0% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 4%;
+  --primary: 0 0% 4%;            /* #0a0a0a */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 96%;         /* #f5f5f5 */
+  --secondary-foreground: 0 0% 4%;
+  --muted-bg: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;  /* #737373 */
+  --accent-bg: 0 0% 4%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border-hsl: 0 0% 83%;        /* #d4d4d4 */
+  --input: 0 0% 83%;
+  --ring: 0 0% 4%;
+  --radius: 0.5rem;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background:
-    radial-gradient(1200px 500px at 20% -10%, rgba(94, 234, 212, 0.08), transparent 60%),
-    radial-gradient(900px 500px at 90% 0%, rgba(167, 139, 250, 0.1), transparent 60%),
-    #05070d;
-  color: #e2e8f0;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(94, 234, 212, 0.3);
+  background: rgba(10, 10, 10, 0.12);
 }
 
-.hud-grid {
-  background-image:
-    linear-gradient(rgba(94, 234, 212, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(94, 234, 212, 0.06) 1px, transparent 1px);
-  background-size: 42px 42px;
-}
-
-.hud-corner {
-  position: relative;
-}
-
-.hud-corner::before,
-.hud-corner::after {
-  content: "";
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: rgba(94, 234, 212, 0.5);
-  border-style: solid;
-  pointer-events: none;
-}
-
-.hud-corner::before {
-  top: -1px;
-  left: -1px;
-  border-width: 2px 0 0 2px;
-  border-top-left-radius: 12px;
-}
-
-.hud-corner::after {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 2px 2px 0;
-  border-bottom-right-radius: 12px;
-}
-
-.glow {
-  box-shadow: 0 0 24px rgba(94, 234, 212, 0.25);
-}
-
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(94, 234, 212, 0.2);
-  border-radius: 8px;
+  background: var(--border);
+  border-radius: 4px;
 }
 
 *::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* ─── Utilitários de card ─────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-title {
+  font-family: var(--font-hand);
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ─── Grade do mapa (só dentro do Context Map) ───────────────────────────── */
+.map-grid {
+  background-image:
+    linear-gradient(var(--border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-color: var(--surface);
 }

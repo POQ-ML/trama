@@ -3,24 +3,34 @@ import Sidebar from "../components/Sidebar";
 import ContextMap from "../components/ContextMap";
 import NodeCard from "../components/NodeCard";
 
-const highlights: Array<{ title: string; subtitle: string; kind: "center" | "source" | "event" }> = [
-  { title: "Cálculo II · P1", subtitle: "12 OUT · evento", kind: "event" },
-  { title: "projeto-final", subtitle: "3 commits hoje · source", kind: "source" },
-  { title: "Trilha de Grafos", subtitle: "hub ativo · center", kind: "center" }
+const highlights: Array<{
+  title: string;
+  subtitle: string;
+  kind: "center" | "source" | "event";
+}> = [
+  { title: "Cálculo II · P1",  subtitle: "12 OUT · EVENTO",        kind: "event"  },
+  { title: "projeto-final",    subtitle: "3 COMMITS HOJE · SOURCE", kind: "source" },
+  { title: "Trilha de Grafos", subtitle: "HUB ATIVO · CENTER",      kind: "center" },
 ];
 
 export default function Home(): JSX.Element {
   return (
-    <main className="hud-grid min-h-screen bg-void">
+    <main className="min-h-screen bg-bg">
       <Navbar />
 
-      <div className="mx-auto grid max-w-[1440px] gap-4 px-4 py-6 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
+      {/* ─── Grade de 3 colunas ─────────────────────────────────────────── */}
+      <div className="mx-auto grid max-w-[1200px] gap-5 px-7 py-5
+                      lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)_minmax(0,300px)]">
+
+        {/* Coluna esquerda */}
         <Sidebar side="left" />
 
-        <div className="space-y-4">
+        {/* Coluna central */}
+        <div className="min-w-0 space-y-4">
           <ContextMap />
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          {/* Cards inferiores */}
+          <div className="grid gap-4 sm:grid-cols-3">
             {highlights.map((h) => (
               <NodeCard
                 key={h.title}
@@ -31,21 +41,31 @@ export default function Home(): JSX.Element {
             ))}
           </div>
 
-          <p className="rounded-xl border border-white/5 bg-black/30 px-4 py-3 text-xs leading-relaxed text-slate-500">
-            TRAMA · Initial Build — interface mockada com dados locais. O mapa,
-            os botões e os cards acima são placeholders visuais: nenhuma ação
-            executa lógica real ainda. A saúde do backend é consultada em{" "}
-            <span className="font-mono text-slate-400">/api/v1/health</span>.
-          </p>
+          {/* Nota informativa — borda tracejada, fundo branco */}
+          <div
+            className="flex gap-3 rounded-md bg-surface px-4 py-3.5 text-[13px] leading-relaxed text-muted"
+            style={{ border: "1px dashed #a3a3a3" }}
+          >
+            {/* Ícone "i" desenhado */}
+            <span
+              aria-hidden="true"
+              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-semibold text-ink"
+              style={{ border: "1.5px solid #0a0a0a" }}
+            >
+              i
+            </span>
+            <p>
+              TRAMA · Initial Build — interface mockada com dados locais. O mapa,
+              os botões e os cards acima são placeholders visuais: nenhuma ação
+              executa lógica real ainda. A saúde do backend é consultada em{" "}
+              <span className="font-mono font-medium text-ink">/api/v1/health</span>.
+            </p>
+          </div>
         </div>
 
+        {/* Coluna direita */}
         <Sidebar side="right" />
       </div>
-
-      <footer className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-6 pb-6 font-mono text-[11px] tracking-widest text-slate-600">
-        <span>TRAMA · HUD SCI-FI MINIMALISTA</span>
-        <span>FRONT MOCK · SEM LÓGICA REAL</span>
-      </footer>
     </main>
   );
 }
