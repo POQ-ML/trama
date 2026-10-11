@@ -13,31 +13,12 @@ function resolveState(status: string): BadgeState {
   return "degraded";
 }
 
-const styles: Record<BadgeState, { dot: string; text: string; ring: string; label: string }> = {
-  checking: {
-    dot: "bg-slate-400 animate-pulse",
-    text: "text-slate-300",
-    ring: "border-white/10",
-    label: "checando…"
-  },
-  healthy: {
-    dot: "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]",
-    text: "text-emerald-200",
-    ring: "border-emerald-300/30",
-    label: "online"
-  },
-  degraded: {
-    dot: "bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]",
-    text: "text-amber-200",
-    ring: "border-amber-300/30",
-    label: "degradado"
-  },
-  unreachable: {
-    dot: "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]",
-    text: "text-rose-200",
-    ring: "border-rose-400/30",
-    label: "offline"
-  }
+/* dot monocromático: preenchido = ok, vazio = offline, pulsando = checando */
+const dotStyles: Record<BadgeState, string> = {
+  checking: "bg-muted animate-pulse",
+  healthy:  "bg-ink",
+  degraded: "border border-ink bg-surface-muted",
+  unreachable: "border border-ink bg-surface",
 };
 
 export default function HealthBadge(): JSX.Element {
@@ -61,22 +42,23 @@ export default function HealthBadge(): JSX.Element {
         setDetail("API: unreachable");
       });
 
-    return (): void => {
-      alive = false;
-    };
+    return (): void => { alive = false; };
   }, []);
-
-  const s = styles[state];
 
   return (
     <div
       role="status"
       title={detail}
-      className={`flex items-center gap-2 rounded-full border ${s.ring} bg-black/40 px-3 py-1.5 font-mono text-xs ${s.text}`}
+      className="flex items-center gap-2 rounded-md border border-ink bg-surface px-3 py-1.5 font-mono text-xs text-ink"
     >
-      <span aria-hidden="true" className={`h-2 w-2 rounded-full ${s.dot}`} />
+      <span
+        aria-hidden="true"
+        className={`h-2 w-2 shrink-0 rounded-full ${dotStyles[state]}`}
+      />
       <span className="hidden sm:inline">{detail}</span>
-      <span className="sm:hidden">{s.label}</span>
+      <span className="sm:hidden">
+        {state === "healthy" ? "ok" : state === "checking" ? "…" : "err"}
+      </span>
     </div>
   );
 }

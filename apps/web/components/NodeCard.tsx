@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 interface NodeCardProps {
   title: string;
   subtitle?: string;
@@ -5,26 +7,35 @@ interface NodeCardProps {
   active?: boolean;
 }
 
-const kindAccent: Record<NonNullable<NodeCardProps["kind"]>, string> = {
-  center: "border-teal-300/60 bg-teal-300/10 text-teal-100 shadow-glow",
-  source: "border-white/10 bg-panel/90 text-slate-200",
-  event: "border-violet-400/30 bg-violet-500/10 text-violet-100"
+/*
+ * center  = hub ativo → fundo branco + shadow-solid-md
+ * source  = fonte     → fundo branco simples
+ * event   = evento    → fundo surface-muted
+ */
+const kindStyles: Record<NonNullable<NodeCardProps["kind"]>, string> = {
+  center: "bg-surface shadow-solid-md",
+  source: "bg-surface",
+  event:  "bg-surface-muted",
 };
 
 export default function NodeCard({
   title,
   subtitle = "nó fictício",
   kind = "source",
-  active = false
+  active = false,
 }: NodeCardProps): JSX.Element {
   return (
     <div
-      className={`rounded-xl border px-3 py-2 text-sm backdrop-blur-md transition-colors ${kindAccent[kind]} ${
-        active ? "ring-1 ring-teal-300/60" : ""
-      }`}
+      className={cn(
+        "rounded-md px-4 py-3 transition-colors",
+        "border-strong border-ink",
+        kindStyles[kind],
+        active && "ring-2 ring-ink ring-offset-1"
+      )}
+      style={{ borderWidth: "1.5px" }}
     >
-      <p className="font-medium leading-tight">{title}</p>
-      <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest opacity-50">
+      <p className="font-hand text-xl leading-tight text-ink">{title}</p>
+      <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-muted">
         {subtitle}
       </p>
     </div>

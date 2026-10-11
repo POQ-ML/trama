@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TRAMA — Agente de Contexto Acadêmico",
-  description: "HUD de contexto acadêmico: mapa, fontes e timeline (MVP mockado)."
+  description: "Mapa de contexto acadêmico: fontes, relações e timeline (MVP mockado)."
 };
 
 export default function RootLayout({
@@ -13,8 +13,24 @@ export default function RootLayout({
   children: ReactNode;
 }): JSX.Element {
   return (
-    <html lang="pt-BR" className="dark">
-      <body className="min-h-screen bg-void font-sans text-slate-200 antialiased">
+    <html lang="pt-BR">
+      <head>
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Patrick+Hand&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-bg font-sans text-ink antialiased">
         {children}
       </body>
     </html>
