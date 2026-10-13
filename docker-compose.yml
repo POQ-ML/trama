@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-trama}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trama}
@@ -41,6 +41,35 @@ services:
     depends_on:
       - api
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@trama.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-trama}
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "40"
+      PGADMIN_CONFIG_FILE_LOG_LEVEL: "40"
+      PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME: "60"
+      PGADMIN_CONFIG_SESSION_EXPIRATION_TIME: "1"
+      PGADMIN_CONFIG_MAX_QUERY_HIST_STORED: "20"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      # Monta apenas o diretório de dados do pgAdmin (SQLite interno + chaves).
+      # Não monta /var/lib/pgadmin/storage para evitar acúmulo de exports/backups.
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 64M
+    restart: unless-stopped
+
   # Redis preparado para uso futuro (cache/filas). Não necessário na Initial Build.
   # redis:
   #   image: redis:7
@@ -49,3 +78,4 @@ services:
 
 volumes:
   pgdata:
+  pgadmin_data:

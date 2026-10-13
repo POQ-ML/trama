@@ -1,8 +1,9 @@
 # ---- deps ----
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+# Copia ambos para que o cache da layer só quebre quando as deps mudarem.
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline
 
 # ---- builder ----
 FROM node:20-alpine AS builder

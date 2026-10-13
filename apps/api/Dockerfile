@@ -4,7 +4,9 @@ WORKDIR /app
 
 # Contexto de build = raiz do monorepo (ver docker-compose.yml).
 COPY apps/api/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# --mount=type=cache mantém o cache do pip entre builds; evita redownload.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY apps/api/ .
 # Migrations vivem em database/migrations; o alembic.ini resolve
