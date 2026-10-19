@@ -28,8 +28,9 @@ from app.models.base import Base
 from app.models.types import TsVector
 
 # Closed set of item types for MVP.  Extend only via product decision.
+# 'repository' added in migration 004 to support GitHub ingestion.
 VALID_ITEM_TYPES: frozenset[str] = frozenset(
-    {"article", "course", "opportunity", "activity"}
+    {"article", "course", "opportunity", "activity", "repository"}
 )
 
 
