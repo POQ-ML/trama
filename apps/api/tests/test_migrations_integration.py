@@ -140,7 +140,7 @@ class TestMigrationChain:
                 text("SELECT version_num FROM alembic_version")
             ).fetchone()
         assert row is not None
-        assert row[0] == "003_persistence_layer"
+        assert row[0] == "004_add_repository_item_type"
 
 
 # ---------------------------------------------------------------------------

@@ -367,8 +367,9 @@ class TestValidConstants:
         assert VALID_PROVIDERS == frozenset({"github", "moodle", "openalex"})
 
     def test_valid_item_types(self):
+        # 'repository' added in migration 004 for GitHub ingestion
         assert VALID_ITEM_TYPES == frozenset(
-            {"article", "course", "opportunity", "activity"}
+            {"article", "course", "opportunity", "activity", "repository"}
         )
 
     def test_valid_entity_types(self):
