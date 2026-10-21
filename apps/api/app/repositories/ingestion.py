@@ -23,14 +23,16 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.academic_item import AcademicItem
 from app.models.source import Source
-from app.services.ingestion.models import NormalisedItem
+
+if TYPE_CHECKING:
+    from app.services.ingestion.models import NormalisedItem
 
 logger = logging.getLogger("trama.ingestion.repository")
 

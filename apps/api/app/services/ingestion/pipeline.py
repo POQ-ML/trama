@@ -128,6 +128,13 @@ class IngestionPipeline:
             logger.error(msg)
             result.error_details.append(msg)
 
+        # Recoverable per-repository fetch failures do not terminate iteration.
+        fetch_errors = getattr(connector, "fetch_errors", ())
+        result.errors += len(fetch_errors)
+        result.error_details.extend(fetch_errors)
+        for msg in fetch_errors:
+            logger.error(msg)
+
         logger.info(
             "Ingestion done: source=%r fetched=%d created=%d updated=%d "
             "unchanged=%d skipped=%d errors=%d",

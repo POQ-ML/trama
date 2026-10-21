@@ -32,7 +32,6 @@ depends_on = None
 
 def upgrade() -> None:
     from alembic import op
-    import sqlalchemy as sa
 
     # PostgreSQL does not support ALTER TABLE ... ADD CHECK with ALTER CONSTRAINT,
     # so we must drop the old check and add a new one.
