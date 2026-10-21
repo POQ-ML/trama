@@ -70,7 +70,7 @@ class ConnectorError(Exception):
 
 
 class _SkipRepo(Exception):
-    """Raised when a single repo should be skipped (404/403/451/private)."""
+    """Raised when a single repo should be skipped (404/451/private)."""
 
 
 class _RateLimitError(Exception):
@@ -136,7 +136,7 @@ def _make_request(url: str, timeout: int, token: str | None) -> tuple[Any, dict]
     """GET url with GitHub headers, return (parsed_json, response_headers).
 
     Raises:
-        _SkipRepo     — 404, 403 without Retry-After (inaccessible), 451
+        _SkipRepo     — 404, 451
         _RateLimitError — 429, or 403 with Retry-After (secondary rate limit)
         _TransientError — 5xx, timeout, connection error
         ConnectorError  — unexpected 4xx, bad JSON
@@ -224,9 +224,6 @@ def _fetch_readme(owner: str, repo: str, timeout: int,
         )
     except _SkipRepo:
         return None  # README absent (404) — normal case
-    except ConnectorError as exc:
-        logger.warning("Could not fetch README for %s/%s: %s", owner, repo, exc)
-        return None
 
     content_b64: str | None = data.get("content")
     if not content_b64:
@@ -246,16 +243,21 @@ def _fetch_readme(owner: str, repo: str, timeout: int,
 # ------------------------------------------------------------------
 
 def _compute_hash(external_id: str, source_key: str, title: str,
-                  description: str | None, metadata: dict) -> str:
+                  description: str | None, metadata: dict,
+                  original_url: str | None = None,
+                  original_date: datetime | None = None) -> str:
     payload = json.dumps(
         {
             "external_id": external_id,
             "source_key": source_key,
             "title": title,
             "description": description,
-            "topics": metadata.get("topics"),
-            "language": metadata.get("language"),
-            "owner": metadata.get("owner"),
+            "original_url": original_url,
+            "original_date": original_date.isoformat() if original_date else None,
+            "metadata": {
+                key: value for key, value in metadata.items()
+                if key not in {"captured_at", "last_seen_at", "stargazers_count", "forks_count"}
+            },
         },
         sort_keys=True,
         ensure_ascii=False,
@@ -331,12 +333,15 @@ def _normalise_repo(raw: dict[str, Any], readme: str | None,
             readme = readme[:README_MAX_CHARS] + "\n[truncated]"
         metadata["readme"] = readme
 
-    content_hash = _compute_hash(external_id, source_key, full_name, description, metadata)
-
     # original_date: prefer pushed_at (most recent activity), fallback updated_at
     original_date = (
         _parse_github_datetime(raw.get("pushed_at"))
         or _parse_github_datetime(raw.get("updated_at"))
+    )
+
+    content_hash = _compute_hash(
+        external_id, source_key, full_name, description, metadata,
+        raw.get("html_url"), original_date,
     )
 
     return NormalisedItem(
@@ -422,6 +427,8 @@ class GitHubConnector:
         self.max_retries = max_retries
         self.source_key = source_key
         self._sleep_fn = _sleep_fn
+        # Recoverable item errors are collected for the pipeline after iteration.
+        self.fetch_errors: list[str] = []
 
     # ------------------------------------------------------------------ #
 
@@ -429,9 +436,11 @@ class GitHubConnector:
         """Yield NormalisedItems for all matching public repositories.
 
         Raises ConnectorError on unrecoverable page-level failure.
-        Individual inaccessible repos (404/403/451/private) are skipped
+        Individual inaccessible repos (404/451/private) are skipped
         with a warning — they do not abort the overall fetch.
+        Other per-repository failures are exposed in fetch_errors, reset each run.
         """
+        self.fetch_errors = []
         if self.repos:
             yield from self._fetch_explicit()
         elif self.org_or_user:
@@ -454,7 +463,11 @@ class GitHubConnector:
     def _process_repo(self, raw: dict, captured_at: datetime) -> NormalisedItem | None:
         owner_login = (raw.get("owner") or {}).get("login") or ""
         repo_name = raw.get("name") or ""
-        readme = self._get_readme(owner_login, repo_name) if owner_login and repo_name else None
+        try:
+            readme = self._get_readme(owner_login, repo_name) if owner_login and repo_name else None
+        except ConnectorError as exc:
+            self.fetch_errors.append(f"README fetch failed for {owner_login}/{repo_name}: {exc}")
+            return None
         return _normalise_repo(raw, readme, self.source_key, captured_at)
 
     def _fetch_explicit(self) -> Iterator[NormalisedItem]:
@@ -478,7 +491,7 @@ class GitHubConnector:
                 logger.warning("Skipping repo %s: %s", repo_slug, exc)
                 continue
             except ConnectorError as exc:
-                logger.error("Error fetching repo %s: %s", repo_slug, exc)
+                self.fetch_errors.append(f"Error fetching repo {repo_slug}: {exc}")
                 continue
 
             item = self._process_repo(raw, captured_at)
@@ -505,11 +518,19 @@ class GitHubConnector:
                     self.max_retries,
                     self._sleep_fn,
                 )
-            except ConnectorError as exc:
-                logger.error("GitHub org/user page %d error: %s", page_num + 1, exc)
-                break
+            except _SkipRepo as exc:
+                # Only the first organization 404 identifies a possible user login.
+                if page_num == 0 and "/orgs/" in url and str(exc) == "HTTP 404":
+                    url = (
+                        f"{_API_BASE}/users/{self.org_or_user}/repos"
+                        f"?type=owner&per_page={self.per_page}"
+                    )
+                    continue
+                raise ConnectorError(f"GitHub org/user page {page_num + 1}: {exc}") from exc
 
-            if not isinstance(data, list) or not data:
+            if not isinstance(data, list):
+                raise ConnectorError("GitHub org/user: expected a repository list")
+            if not data:
                 logger.info("GitHub org/user: empty page %d, done", page_num + 1)
                 break
 
@@ -547,16 +568,16 @@ class GitHubConnector:
                     self.max_retries,
                     self._sleep_fn,
                 )
-            except ConnectorError as exc:
-                logger.error("GitHub search page %d error: %s", page, exc)
-                break
+            except _SkipRepo as exc:
+                raise ConnectorError(f"GitHub search page {page}: {exc}") from exc
 
             if not isinstance(data, dict):
-                logger.error("GitHub search: unexpected response type on page %d", page)
-                break
+                raise ConnectorError(f"GitHub search: unexpected response type on page {page}")
 
             items = data.get("items")
-            if not isinstance(items, list) or not items:
+            if not isinstance(items, list):
+                raise ConnectorError(f"GitHub search: missing repository list on page {page}")
+            if not items:
                 logger.info("GitHub search: empty results on page %d, done", page)
                 break
 

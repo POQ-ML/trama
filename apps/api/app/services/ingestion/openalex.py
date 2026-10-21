@@ -108,7 +108,9 @@ def _reconstruct_abstract(inverted_index: dict | None) -> str | None:
 # ------------------------------------------------------------------
 
 def _compute_hash(external_id: str, source_key: str, title: str,
-                  description: str | None, metadata: dict) -> str:
+                  description: str | None, metadata: dict,
+                  original_url: str | None = None,
+                  original_date: datetime | None = None) -> str:
     """SHA-256 of stable content fields. Change → new hash → triggers update."""
     payload = json.dumps(
         {
@@ -116,9 +118,12 @@ def _compute_hash(external_id: str, source_key: str, title: str,
             "source_key": source_key,
             "title": title,
             "description": description,
-            "authors": metadata.get("authors"),
-            "topics": metadata.get("topics"),
-            "doi": metadata.get("doi"),
+            "original_url": original_url,
+            "original_date": original_date.isoformat() if original_date else None,
+            "metadata": {
+                key: value for key, value in metadata.items()
+                if key not in {"captured_at", "last_seen_at", "cited_by_count"}
+            },
         },
         sort_keys=True,
         ensure_ascii=False,
@@ -245,7 +250,9 @@ def _normalise_work(raw: dict[str, Any], source_key: str,
         "captured_at": captured_at.isoformat(),
     }
 
-    content_hash = _compute_hash(external_id, source_key, title, description, metadata)
+    content_hash = _compute_hash(
+        external_id, source_key, title, description, metadata, original_url, original_date,
+    )
 
     return NormalisedItem(
         external_id=external_id,

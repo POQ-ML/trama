@@ -32,6 +32,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from pathlib import Path
+
+# Direct execution puts scripts/, rather than the API root, on sys.path.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 logging.basicConfig(
     level=logging.INFO,

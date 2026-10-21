@@ -201,3 +201,23 @@ TEST_DATABASE_URL=postgresql+psycopg2://trama:trama@localhost:5432/trama \
 3. **Criação de entidades canônicas**: o pipeline persiste apenas `AcademicItem`. A criação de `Entity` (autores, tópicos) é responsabilidade do Relationship Engine.
 4. **Moodle**: fora do escopo desta entrega (requer credenciais do usuário — PD-0001).
 5. **Rate limit do GitHub sem token**: 60 req/h para operações core + requisição extra de README por repo — em buscas grandes, pode esgotar rapidamente sem token.
+
+### Execução direta e detecção de alterações
+
+A partir de `apps/api`, tanto `python scripts/ingest.py github --repos owner/repo`
+quanto `python -m scripts.ingest github --repos owner/repo` funcionam sem configurar
+`PYTHONPATH`. Defina `DATABASE_URL` antes da execução.
+
+Os hashes incluem URL e data originais e os metadados de conteúdo normalizados,
+incluindo README (também quando antes ausente), idioma, tópicos e demais campos
+descritivos. Excluem `captured_at`, `last_seen_at` e contadores de popularidade
+(`stargazers_count`, `forks_count`, `cited_by_count`). Alterações apenas nesses
+contadores não disparam atualização. A primeira coleta após esta correção pode
+atualizar hashes antigos uma vez; a primeira captura continua preservada.
+
+`--org LOGIN` tenta a organização e, apenas após 404 na primeira página, tenta
+os repositórios públicos do usuário. Falhas de autenticação, rede, limite de taxa
+ou retries esgotados são contabilizadas em `errors` e retornam código CLI 1.
+Falhas por repositório, inclusive na coleta do README, permitem continuar os demais;
+falhas de página encerram a paginação. Itens já commitados são preservados.
+404/451 de repositórios e README ausente continuam sendo skips legítimos.
