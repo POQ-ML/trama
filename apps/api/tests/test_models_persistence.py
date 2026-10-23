@@ -374,12 +374,12 @@ class TestValidConstants:
 
     def test_valid_entity_types(self):
         assert VALID_ENTITY_TYPES == frozenset(
-            {"person", "project", "topic", "event", "source"}
+            {"person", "project", "topic", "event", "source", "article"}
         )
 
     def test_valid_relationship_types(self):
         assert VALID_RELATIONSHIP_TYPES == frozenset(
-            {"topic_source", "project_event", "project_topic"}
+            {"topic_source", "project_event", "project_topic", "project_article"}
         )
 
     def test_valid_statuses(self):

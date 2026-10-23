@@ -1,16 +1,16 @@
 """Entity model — canonical map node (vertex in the knowledge graph).
 
-Entity types are restricted to the 5 approved by the domain model and
-PD-0002 scope: person, project, topic, event, source.
+Entity.article and stable project/article item identities extend PD-0002
+under the user-authorized PD-0003 discovery contract.
 
 'source' as an entity type represents a data-source node *on the map*
 (e.g. "OpenAlex" as a concept node). It is distinct from the Source model,
 which is an integration record.  No new types may be added without an
 approved product decision.
 
-A self-referential constraint and a compound unique index on (type, label)
-are enforced at the DB layer. Self-relationships are blocked on the
-Relationship model, not here.
+Project/article identities use (type, origin item), independent of mutable
+labels. Legacy/manual nodes keep uniqueness by (type, label). Migration 005
+refuses ambiguous legacy item identities rather than merging or deleting data.
 """
 
 import uuid
@@ -22,7 +22,8 @@ from sqlalchemy import (
     Index,
     String,
     Text,
-    UniqueConstraint,
+    CheckConstraint,
+    text,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -32,7 +33,7 @@ from app.models.base import Base
 
 # Closed set — no new types without approved product decision (PD-0002 scope).
 VALID_ENTITY_TYPES: frozenset[str] = frozenset(
-    {"person", "project", "topic", "event", "source"}
+    {"person", "project", "topic", "event", "source", "article"}
 )
 
 
@@ -42,7 +43,13 @@ class Entity(Base):
     __tablename__ = "entities"
     __table_args__ = (
         # (type, label) should be unique to prevent duplicated canonical nodes.
-        UniqueConstraint("entity_type", "label", name="uq_entity_type_label"),
+        Index("uq_entity_legacy_label", "entity_type", "label", unique=True,
+              postgresql_where=text("entity_type NOT IN ('project','article') OR origin_item_id IS NULL"),
+              sqlite_where=text("entity_type NOT IN ('project','article') OR origin_item_id IS NULL")),
+        Index("uq_entity_item_identity", "entity_type", "origin_item_id", unique=True,
+              postgresql_where=text("entity_type IN ('project','article') AND origin_item_id IS NOT NULL"),
+              sqlite_where=text("entity_type IN ('project','article') AND origin_item_id IS NOT NULL")),
+        CheckConstraint("entity_type <> 'article' OR origin_item_id IS NOT NULL", name="ck_article_origin"),
         # Partial index for fast lookup of entities by type.
         Index("ix_entities_entity_type", "entity_type"),
         # Index on origin_item_id for provenance queries.

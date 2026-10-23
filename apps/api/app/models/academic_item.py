@@ -1,8 +1,9 @@
 """AcademicItem model — normalised record imported from a Source.
 
-Immutable after initial write: corrections produce a new version (bumped
-content_hash). Raw payloads are NOT stored here; only the normalised fields
-needed for entity/relation detection are persisted.
+The ingestion repository updates normalized content in place when its hash
+changes, preserving first captured_at. Historical discovery support lives in
+immutable Evidence excerpts/hashes, not in this mutable item row. Raw provider
+payloads are not stored here.
 
 Item types (article, course, opportunity, activity) describe the kind of
 imported object and are deliberately separate from Entity types (person,
@@ -86,8 +87,8 @@ class AcademicItem(Base):
     )
 
     # SHA-256 hash of (source_id + external_id + normalised content).
-    # Changing this implies a new version — immutability is enforced at the
-    # service layer, not here, to allow the migration path.
+    # Ingestion updates current content in place when this changes. Historical
+    # discovery Evidence keeps its own immutable excerpt and capture_version.
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
 
     # Structured provenance and provider-specific fields that don't fit the

@@ -11,6 +11,7 @@ from app.models.academic_item import AcademicItem
 from app.models.entity import Entity
 from app.models.relationship import Relationship
 from app.models.evidence import Evidence
+from app.models.discovery import DiscoveryRun, DiscoverySuggestion
 
 __all__ = [
     "Base",
@@ -20,4 +21,6 @@ __all__ = [
     "Entity",
     "Relationship",
     "Evidence",
+    "DiscoveryRun",
+    "DiscoverySuggestion",
 ]
