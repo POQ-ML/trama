@@ -89,7 +89,14 @@ def _sqlite_create_all(engine) -> None:
             if uq.__class__.__name__ == "UniqueConstraint"
         ]
 
-        Table(table.name, coerced_meta, *new_cols, *uq_constraints)
+        new_table = Table(table.name, coerced_meta, *new_cols, *uq_constraints)
+        # Preserve model partial uniqueness; copying only UniqueConstraint loses
+        # discovery's item identities and legacy-label rules on SQLite.
+        from sqlalchemy import Index
+        for index in table.indexes:
+            if index.unique:
+                Index(index.name, *[new_table.c[col.name] for col in index.columns],
+                      unique=True, sqlite_where=index.dialect_options["sqlite"].get("where"))
 
     coerced_meta.create_all(engine)
 

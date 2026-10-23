@@ -1,7 +1,7 @@
 """Evidence model — material that supports a Relationship claim.
 
 Each Relationship may have multiple Evidence records. A relationship
-without at least one confirmed evidence record should not be displayed
+without traceable evidence should not be displayed
 (enforced at the service layer per PD-0002 rule 4).
 
 LLM-generated explanations are NOT evidence. Evidence must trace back
@@ -14,7 +14,7 @@ changes, a new Evidence record should be created with updated capture info.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.orm import relationship as sa_relationship
@@ -26,6 +26,9 @@ class Evidence(Base):
     """Material rastreável que sustenta uma relação no grafo."""
 
     __tablename__ = "evidences"
+    __table_args__ = (UniqueConstraint("relationship_id", "snapshot_key", name="uq_evidence_snapshot"),)
+
+    snapshot_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -64,6 +67,7 @@ class Evidence(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+    # Discovery evidence snapshots are immutable in migration 005 (DB trigger).
     # Additional structured metadata (e.g. confidence score, extraction method).
     metadata_: Mapped[dict | None] = mapped_column(
         "metadata", JSONB, nullable=True, default=None
