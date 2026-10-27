@@ -220,6 +220,10 @@ class GeminiLLMProvider(LLMProvider):
                 raw = await self._call_once(request)
             except LLMError:
                 raise
+            except asyncio.CancelledError:
+                # Preserve task cancellation so outer run/explainer deadlines
+                # can become TimeoutError instead of an UNKNOWN provider error.
+                raise
             except BaseException as exc:  # SDK/transport errors → normalized
                 category, retryable = classify_exception(exc)
                 last_error = LLMError(

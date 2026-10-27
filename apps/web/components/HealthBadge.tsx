@@ -27,8 +27,10 @@ export default function HealthBadge(): JSX.Element {
 
   useEffect(() => {
     let alive = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
-    getApiHealth()
+    getApiHealth(controller.signal)
       .then((h) => {
         if (!alive) return;
         const next = resolveState(h.status);
@@ -42,7 +44,7 @@ export default function HealthBadge(): JSX.Element {
         setDetail("API: unreachable");
       });
 
-    return (): void => { alive = false; };
+    return (): void => { alive = false; clearTimeout(timeout); controller.abort(); };
   }, []);
 
   return (

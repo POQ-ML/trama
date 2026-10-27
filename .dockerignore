@@ -9,3 +9,9 @@
 postgres-data
 
 pgadmin_data
+
+**/.env
+**/.env.*
+**/.env*.local
+**/coverage
+.aws

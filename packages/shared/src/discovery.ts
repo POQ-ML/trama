@@ -11,7 +11,9 @@ export type ErrorCode =
   | "source_unavailable"
   | "timeout"
   | "invalid_evidence"
-  | "internal_error";
+  | "internal_error"
+  | "insufficient_context"
+  | "analysis_warning";
 
 export type DiscoveryCreate = {
   /** Canonical public https://github.com/owner/repo URL; server strips trailing slash. */
@@ -72,6 +74,8 @@ type RunReadFields = {
   created_at: ISODateTime;
   /** Server-calculated deadline; must follow created_at. */
   deadline_at: ISODateTime;
+  /** Safe warning codes; empty for a clean analysis. */
+  warnings: string[];
 };
 
 /** Mirrors RunRead.coherent_state; failed runs may fail before starting. */
@@ -146,4 +150,57 @@ export type FeedbackRead = {
   id: UUID;
   status: "confirmed" | "rejected";
   updated_at: ISODateTime;
+};
+
+/** Public JSON contracts from apps/api/app/schemas/monitoring.py. */
+export type MonitorUpdate = {
+  enabled: boolean;
+  /** Strict integer 60..86400 seconds; server default 300. */
+  interval_seconds?: number;
+  /** Server default false. */
+  reanalyze_on_change?: boolean;
+};
+
+export type MonitorRead = {
+  id: UUID;
+  repo_url: string;
+  source_item_id: UUID | null;
+  enabled: boolean;
+  interval_seconds: number;
+  reanalyze_on_change: boolean;
+  latest_run_id: UUID;
+  last_checked_at: ISODateTime | null;
+  last_changed_at: ISODateTime | null;
+  next_check_at: ISODateTime | null;
+  error_code: string | null;
+  /** Context has changed relative to the monitor's latest run. */
+  stale: boolean;
+};
+
+export type ChangeRead = {
+  id: UUID;
+  monitor_id: UUID;
+  repo_url: string;
+  kind: "source_changed";
+  observed_at: ISODateTime;
+  previous_hash: string;
+  current_hash: string;
+  read_at: ISODateTime | null;
+  latest_run_id: UUID | null;
+};
+
+export type ChangePage = {
+  items: ChangeRead[];
+  limit: DiscoveryLimit;
+  next_cursor: UUID | null;
+};
+
+export type ApiErrorDetail = {
+  code: string;
+  message: string;
+  retryable: boolean;
+};
+
+export type ApiError = {
+  error: ApiErrorDetail;
 };

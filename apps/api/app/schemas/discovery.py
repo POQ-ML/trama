@@ -36,10 +36,12 @@ class ErrorCode(str, Enum):
     TIMEOUT = "timeout"
     INVALID_EVIDENCE = "invalid_evidence"
     INTERNAL_ERROR = "internal_error"
+    INSUFFICIENT_CONTEXT = "insufficient_context"
+    ANALYSIS_WARNING = "analysis_warning"
 
 
 class DiscoveryCreate(ContractModel):
-    repo_url: str
+    repo_url: str = Field(max_length=2048)
 
     @field_validator("repo_url")
     @classmethod
@@ -54,7 +56,7 @@ class DiscoveryCreate(ContractModel):
             or any(part in {".", ".."} for part in url.path.split("/")[1:])
         ):
             raise ValueError("Use a canonical public GitHub repository URL")
-        return value.rstrip("/")
+        return value.rstrip("/").lower()
 
 
 class RunUpdate(ContractModel):
@@ -126,6 +128,7 @@ class SuggestionRead(ContractModel):
 
 
 class RunRead(ContractModel):
+    warnings: list[str] = Field(default_factory=list)
     id: UUID
     repo_url: str
     project: ProjectRead | None

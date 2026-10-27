@@ -22,4 +22,10 @@ export type {
   DiscoveryPage,
   FeedbackUpdate,
   FeedbackRead,
+  MonitorUpdate,
+  MonitorRead,
+  ChangeRead,
+  ChangePage,
+  ApiErrorDetail,
+  ApiError,
 } from "./discovery";
