@@ -190,7 +190,7 @@ def test_downgrade_refuses_new_data_without_loss(migration_engine):
             )
             assert (
                 conn.scalar(text("SELECT version_num FROM alembic_version"))
-                == "005_discovery_contract"
+                == "006_discovery_runtime"
             )
     finally:
         with engine.begin() as conn:

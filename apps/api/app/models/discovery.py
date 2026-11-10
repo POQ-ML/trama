@@ -3,7 +3,17 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Float, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Float,
+    String,
+    Text,
+    Index,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,13 +23,27 @@ from app.models.base import Base
 class DiscoveryRun(Base):
     __tablename__ = "discovery_runs"
     __table_args__ = (
+        Index(
+            "ix_discovery_queue", "created_at", postgresql_where=text("status='queued'")
+        ),
+        Index(
+            "uq_discovery_active_monitor",
+            "monitor_id",
+            unique=True,
+            postgresql_where=text(
+                "monitor_id IS NOT NULL AND status IN ('queued','running')"
+            ),
+            sqlite_where=text(
+                "monitor_id IS NOT NULL AND status IN ('queued','running')"
+            ),
+        ),
         CheckConstraint(
             "status IN ('queued','running','completed','partial','failed')",
             name="ck_discovery_status",
         ),
         CheckConstraint("deadline_at > created_at", name="ck_discovery_deadline"),
         CheckConstraint(
-            "error_code IS NULL OR error_code IN ('source_unavailable','timeout','invalid_evidence','internal_error')",
+            "error_code IS NULL OR error_code IN ('source_unavailable','timeout','invalid_evidence','internal_error','insufficient_context','analysis_warning')",
             name="ck_discovery_error_code",
         ),
         CheckConstraint(
@@ -31,6 +55,16 @@ class DiscoveryRun(Base):
             name="ck_discovery_finished",
         ),
     )
+    monitor_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("source_monitors.id", ondelete="RESTRICT", use_alter=True),
+    )
+    warnings: Mapped[list] = mapped_column(
+        JSONB, nullable=False, default=list, server_default="[]"
+    )
+    context_hash: Mapped[str | None] = mapped_column(String(64))
+    claim_token: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )

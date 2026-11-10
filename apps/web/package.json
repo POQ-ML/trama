@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "echo \"web: no tests yet\" && exit 0"
+    "test:client": "node --test tests/discovery-client.test.cjs",
+    "test": "npm run test:client"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

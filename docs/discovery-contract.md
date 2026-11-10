@@ -2,8 +2,9 @@
 
 Etapa autorizada em 2026-10-23 pela PD-0003 do vault. Runtime em
 `apps/api/app`, migration `005_discovery_contract` e tipos cliente em
-`packages/shared/src/discovery.ts`. Esta etapa não implementa endpoints,
-recuperação de artigos, ranking, geração LLM ou integração da interface.
+`packages/shared/src/discovery.ts`. A etapa inicial documentada abaixo implementou contrato/persistência. A rodada
+seguinte acrescenta API, worker e monitoramento descritos em
+[discovery-runtime.md](discovery-runtime.md), mantendo a semântica histórica.
 
 ## Semântica e identidade
 
@@ -30,8 +31,8 @@ não validam fontes, URLs ou instantes em runtime.
 | `GET /api/v1/discoveries/{id}` | `DiscoveryQuery {limit?, cursor?}` | `DiscoveryPage` |
 | `PATCH /api/v1/relationships/{id}/feedback` | `FeedbackUpdate {status}` | `FeedbackRead {id,status,updated_at}` |
 
-As rotas acima **não estão registradas nesta etapa**. O futuro handler serializará a `Relationship` atualizada retornada pelo repositório
-em `FeedbackRead`; não há resposta HTTP implementada agora. `EvidenceInput`, `SuggestionInput` e `RunUpdate`
+As rotas acima foram registradas na rodada de runtime; veja o setup no documento ligado acima. O futuro handler serializará a `Relationship` atualizada retornada pelo repositório
+em `FeedbackRead`; a resposta HTTP está implementada na rodada de runtime. `EvidenceInput`, `SuggestionInput` e `RunUpdate`
 são contratos internos, nunca corpos de requests com evidências confiadas ao
 cliente ou ao LLM.
 
@@ -49,8 +50,9 @@ calculado pelo servidor; `deadline_at` não pertence ao corpo de cadastro.
 
 O futuro orquestrador deve executar `expire_run` explicitamente na recuperação
 de execuções interrompidas: é idempotente, marca `partial` quando há resultados
-persistidos e `failed` quando não há, com erro `timeout`. Leituras não escrevem
-nem há worker/agendador novo. Esse mecanismo não cancela chamadas externas;
+persistidos e `failed` quando não há, com erro `timeout`. Na etapa inicial, leituras não escreviam. Na rodada atual há worker e a leitura
+HTTP pode recuperar um run cujo prazo venceu; a leitura de repositório isolada
+continua sem esse efeito. Esse mecanismo não cancela chamadas externas;
 o próximo pipeline precisará aplicar seu próprio orçamento de tempo.
 
 O chamador controla transações curtas com `with session.begin():`. O novo

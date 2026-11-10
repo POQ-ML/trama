@@ -12,6 +12,7 @@ from app.models.entity import Entity
 from app.models.relationship import Relationship
 from app.models.evidence import Evidence
 from app.models.discovery import DiscoveryRun, DiscoverySuggestion
+from app.models.monitoring import SourceMonitor, SourceChange, DiscoveryRequest
 
 __all__ = [
     "Base",
@@ -21,6 +22,7 @@ __all__ = [
     "Entity",
     "Relationship",
     "Evidence",
+    "SourceMonitor", "SourceChange", "DiscoveryRequest",
     "DiscoveryRun",
     "DiscoverySuggestion",
 ]

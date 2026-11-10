@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TRAMA — Agente de Contexto Acadêmico",
-  description: "Mapa de contexto acadêmico: fontes, relações e timeline (MVP mockado)."
+  description: "Conecte seu repositório público a artigos OpenAlex e explore contribuições com evidências rastreáveis."
 };
 
 export default function RootLayout({

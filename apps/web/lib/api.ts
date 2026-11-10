@@ -23,12 +23,12 @@ export function getApiBaseUrl(): string {
  * Nunca lança exceção: em falha de rede/resposta retorna
  * `{ status: "unreachable", ... }` para a UI degradar com graça.
  */
-export async function getApiHealth(): Promise<ApiHealth> {
+export async function getApiHealth(signal?: AbortSignal): Promise<ApiHealth> {
   const apiUrl = getApiBaseUrl();
   const target = `${apiUrl.replace(/\/$/, "")}/api/v1/health`;
 
   try {
-    const res = await fetch(target, { cache: "no-store" });
+    const res = await fetch(target, { cache: "no-store", signal });
 
     if (!res.ok) {
       return {

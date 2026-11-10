@@ -16,12 +16,14 @@ services:
       retries: 10
 
   api:
+    image: trama-api:local
     build:
       context: .
       dockerfile: ./apps/api/Dockerfile
-    environment:
+    environment: &api_environment
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-trama}:${POSTGRES_PASSWORD:-trama}@postgres:5432/${POSTGRES_DB:-trama}
       ENVIRONMENT: ${ENVIRONMENT:-local}
+      BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       LLM_MODEL: ${LLM_MODEL:-gemini-3.5-flash-lite}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
@@ -32,16 +34,39 @@ services:
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       OPENALEX_EMAIL: ${OPENALEX_EMAIL:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      DISCOVERY_DEADLINE_SECONDS: ${DISCOVERY_DEADLINE_SECONDS:-120}
+      DISCOVERY_TOP_K: ${DISCOVERY_TOP_K:-5}
+      DISCOVERY_LLM_ENABLED: ${DISCOVERY_LLM_ENABLED:-false}
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-2}
+      MONITOR_FETCH_SECONDS: ${MONITOR_FETCH_SECONDS:-20}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    image: trama-api:local
+    environment: *api_environment
+    command: ["python", "-m", "scripts.discovery_worker"]
+    restart: unless-stopped
+    stop_grace_period: 130s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
 
   web:
     build:
-      context: ./apps/web
+      context: .
+      dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     environment:

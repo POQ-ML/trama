@@ -25,6 +25,7 @@ from app.models import (
     Evidence,
     Relationship,
     Source,
+    SourceMonitor,
 )
 from app.schemas.discovery import (
     DiscoveryCreate,
@@ -196,6 +197,13 @@ def create_run(
     return run
 
 
+def _run_source_matches(session, run, snapshot):
+    if snapshot.reference_url.lower() == run.repo_url.lower():
+        return True
+    monitor = session.get(SourceMonitor, run.monitor_id) if run.monitor_id else None
+    return monitor is not None and monitor.source_item_id == snapshot.origin_item_id
+
+
 def update_run(session: Session, run_id: UUID, data: RunUpdate) -> DiscoveryRun:
     run = session.scalars(
         select(DiscoveryRun)
@@ -224,7 +232,7 @@ def update_run(session: Session, run_id: UUID, data: RunUpdate) -> DiscoveryRun:
         if (
             project.entity_type != "project"
             or snap.side != "repo"
-            or snap.reference_url != run.repo_url
+            or not _run_source_matches(session, run, snap)
         ):
             raise IdentityConflict("Run URL and project identity disagree")
         if run.project_id is not None and run.project_id != project.id:
@@ -323,7 +331,7 @@ def _save_suggestions(
         raise IdentityConflict("Missing source item")
     repo_item, repo_provider = sources[cast(UUID, project.origin_item_id)]
     repo_snapshot = snapshot_from_item(repo_item, repo_provider)
-    if repo_snapshot.side != "repo" or repo_snapshot.reference_url != run.repo_url:
+    if repo_snapshot.side != "repo" or not _run_source_matches(session, run, repo_snapshot):
         raise IdentityConflict("Project does not match run repository")
     validated: dict[UUID, list[dict]] = {}
     for proposal in suggestions:
@@ -471,6 +479,7 @@ def get_run(session: Session, run_id: UUID) -> RunRead:
         finished_at=run.finished_at,
         deadline_at=run.deadline_at,
         error_code=cast(ErrorCode | None, run.error_code),
+        warnings=list(run.warnings or []),
     )
 
 
