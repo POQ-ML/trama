@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import type { RunRead } from "../../../packages/shared/src";
+import { runHref, type SourceScope } from "../lib/projectRoutes";
 import { useMonitor } from "../lib/useMonitor";
 import { dateLabel, sourceErrorLabel } from "../lib/discovery";
 import { Button } from "./ui/button";
 import { Bell, RefreshCw } from "lucide-react";
 
-export default function SourceMonitor({ run, reanalyzing, onReanalyze }: { run: RunRead; reanalyzing: boolean; onReanalyze: () => void }): JSX.Element {
+export default function SourceMonitor({ run, reanalyzing, onReanalyze, scope }: { run: RunRead; reanalyzing: boolean; onReanalyze: () => void; scope?: SourceScope }): JSX.Element {
   const state = useMonitor(run.id, run.status);
   const [interval, setInterval] = useState(300);
   const { monitor } = state;
@@ -25,7 +26,7 @@ export default function SourceMonitor({ run, reanalyzing, onReanalyze }: { run: 
     {(monitor?.stale || oldRun || unread.length > 0) && <div className="notice mt-5 border-l-4" role="status">
       <h3 className="font-semibold">{oldRun ? "Você está vendo uma análise anterior" : monitor?.stale ? "A fonte mudou: sugestões podem estar antigas" : "Há avisos de mudança para revisar"}</h3>
       <p className="mt-2 text-sm">{oldRun ? "Já existe outra análise para esta fonte. As evidências desta página pertencem à execução anterior." : monitor?.stale ? "Confira o contexto atual com uma nova análise. As evidências anteriores ficam preservadas." : "Consulte o histórico abaixo. Esses avisos podem corresponder a mudanças já reanalisadas."}</p>
-      {oldRun && <a className="source-link mt-3 inline-block" href={`?run=${encodeURIComponent(monitor.latest_run_id)}`}>Abrir análise mais recente →</a>}
+      {oldRun && <a className="source-link mt-3 inline-block" href={runHref(scope, monitor.latest_run_id)}>Abrir análise mais recente →</a>}
       {(monitor?.stale || oldRun) && <div><Button className="mt-3" variant={oldRun ? "outline" : "default"} size="sm" disabled={reanalyzing} onClick={onReanalyze}><RefreshCw size={14} aria-hidden="true" />{reanalyzing ? "Análise em andamento…" : "Reanalisar contexto atual"}</Button></div>}
     </div>}
 

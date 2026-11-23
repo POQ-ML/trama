@@ -7,7 +7,7 @@ export default function Navbar(): JSX.Element {
         <span aria-hidden="true" className="flex h-11 w-11 items-center justify-center rounded-md bg-ink font-hand text-2xl text-white shadow-solid-logo">T</span>
         <span><span className="block font-hand text-2xl tracking-[.25em]">TRAMA</span><span className="block text-xs text-muted">Agente de Contexto Acadêmico</span></span>
       </a>
-      <div className="flex items-center gap-4"><a href="#discovery-form" className="hidden text-sm underline-offset-4 hover:underline sm:block">Explorar conexões</a><HealthBadge /></div>
+      <div className="flex items-center gap-4"><nav aria-label="Navegação principal" className="flex flex-wrap gap-4 text-sm"><a href="/" className="underline-offset-4 hover:underline">Projetos</a><a href="/discoveries" className="underline-offset-4 hover:underline">Diagnóstico avulso</a></nav><HealthBadge /></div>
     </div>
   </header>;
 }

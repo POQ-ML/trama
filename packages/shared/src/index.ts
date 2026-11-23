@@ -29,3 +29,11 @@ export type {
   ApiErrorDetail,
   ApiError,
 } from "./discovery";
+export type {
+  AcademicProjectCreate,
+  AcademicProjectRead,
+  AcademicProjectDetail,
+  ProjectSourceCreate,
+  ProjectSourceRead,
+  ProjectActivityRead,
+} from './projects';

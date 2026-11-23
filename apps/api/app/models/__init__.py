@@ -13,9 +13,12 @@ from app.models.relationship import Relationship
 from app.models.evidence import Evidence
 from app.models.discovery import DiscoveryRun, DiscoverySuggestion
 from app.models.monitoring import SourceMonitor, SourceChange, DiscoveryRequest
+from app.models.projects import AcademicProject, ProjectSource
 
 __all__ = [
     "Base",
+    "AcademicProject",
+    "ProjectSource",
     "User",
     "Source",
     "AcademicItem",
