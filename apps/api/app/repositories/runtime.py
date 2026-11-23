@@ -444,6 +444,9 @@ def record_observation(
                 run.claim_token = None
             run.monitor_id = m.id
         session.flush()
+        from app.repositories.projects import transfer_monitor_bindings
+
+        transfer_monitor_bindings(session, alias.id, m.id)
         session.delete(alias)
         session.flush()
     item_id = persist_items(session, [result.item])[result.item.external_id]

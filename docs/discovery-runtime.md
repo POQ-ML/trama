@@ -37,7 +37,8 @@ Para validar a configuração sem iniciar/recriar serviços, use
 
 A API aplica `alembic upgrade head` antes de iniciar. Seu healthcheck só passa
 quando o servidor está disponível; o worker depende da API saudável e do
-PostgreSQL saudável. A migration atual é `006_discovery_runtime`. O frontend
+PostgreSQL saudável. A migration atual é `007_academic_projects`; a migration `006_discovery_runtime`
+continua sendo a base do worker e do monitoramento. O frontend
 é construído com contexto da raiz para incluir os tipos compartilhados. Arquivos
 `.env`, variantes locais, cobertura e caches ficam fora do contexto Docker.
 
@@ -228,3 +229,11 @@ após perder a posse. Os jobs são persistidos, mas não há garantia de process
 sem executar o worker. Reinicie-o para continuar jobs/checks; falhas não viram
 sucesso vazio. Consulte os testes e o relatório de execução para evidência de
 concorrência, deduplicação, migrations e limites, sem inferir SLA de produção.
+
+## Organização por projetos acadêmicos
+
+A página inicial organiza projetos e fontes persistentes. O detalhe de cada
+fonte reutiliza o diagnóstico e o worker descritos neste documento. Cadastro
+de fonte não inicia análise. Migração de fontes anteriores, rotas novas,
+limites de identidade e passos de verificação estão em
+[project-navigation.md](project-navigation.md).

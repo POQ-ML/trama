@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, BookOpen, GitBranch, Network, Search } from "lucide-react";
+import type { RunRead } from "../../../packages/shared/src";
+import type { SourceScope } from "../lib/projectRoutes";
 import { useDiscovery } from "../lib/useDiscovery";
 import { dateLabel, runLabel, sourceErrorLabel, sourceUrl, statusLabel, warningLabel, type MapSelection } from "../lib/discovery";
 import { analysisLabel } from "../lib/readableAnalysis";
@@ -10,8 +12,8 @@ import SuggestionDetail from "./SuggestionDetail";
 import SourceMonitor from "./SourceMonitor";
 import { Button } from "./ui/button";
 
-export default function DiscoveryWorkspace(): JSX.Element {
-  const discovery = useDiscovery();
+export default function DiscoveryWorkspace({ source }: { source?: { scope: SourceScope; repoUrl: string; initialRun: RunRead | null } }): JSX.Element {
+  const discovery = useDiscovery(source);
   const [repoUrl, setRepoUrl] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "map">("map");
@@ -35,7 +37,7 @@ export default function DiscoveryWorkspace(): JSX.Element {
   const close = (): void => { setSelection(null); trigger.current?.focus({ preventScroll: true }); };
 
   return <div className="space-y-8">
-    <section className="grid items-end gap-8 lg:grid-cols-[1fr_440px]" aria-labelledby="hero-title">
+    {!source && <section className="grid items-end gap-8 lg:grid-cols-[1fr_440px]" aria-labelledby="hero-title">
       <div><p className="eyebrow mb-4">Uma ponte entre código e pesquisa</p>
         <h1 id="hero-title" className="max-w-2xl font-hand text-5xl leading-[1.05] sm:text-6xl">Seu próximo insight<br /><span className="hero-underline">pode estar num artigo.</span></h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">Parta de um repositório público. Explore artigos que podem contribuir com o projeto e confira os trechos que sustentam cada conexão.</p>
@@ -45,9 +47,9 @@ export default function DiscoveryWorkspace(): JSX.Element {
         <div className="flex flex-col items-center gap-3"><span aria-hidden="true">······→······</span><span className="rounded-full border border-ink px-3 py-1 text-[10px]">EVIDÊNCIAS</span></div>
         <div className="space-y-3"><BookOpen aria-hidden="true" size={24} /><p>OPENALEX</p><p className="text-muted">Pesquisa aberta</p></div>
       </div>
-    </section>
+    </section>}
 
-    <form id="discovery-form" className="rounded-md border-[1.5px] border-ink bg-surface p-5 shadow-solid-md sm:p-6"
+    {!source && <form id="discovery-form" className="rounded-md border-[1.5px] border-ink bg-surface p-5 shadow-solid-md sm:p-6"
       onSubmit={event => {
         event.preventDefault(); setFormError(null);
         try {
@@ -66,7 +68,9 @@ export default function DiscoveryWorkspace(): JSX.Element {
       </div>
       <p id="repo-help" className="mt-3 text-xs leading-relaxed text-muted">Apenas repositórios públicos · sem token GitHub · o tempo depende das fontes e da fila de processamento.</p>
       <div id="repo-error">{formError && <p role="alert" className="mt-2 text-sm">{formError}</p>}</div>
-    </form>
+    </form>}
+
+    {source && !run && !discovery.loading && <section className="card"><h2 className="font-hand text-3xl">Conexões desta fonte</h2><p className="text-sm text-muted">Abra a última análise ou solicite um diagnóstico deste repositório.</p><Button disabled={busy} onClick={() => void discovery.start(source.repoUrl)}>{busy ? "Iniciando…" : "Analisar fonte GitHub"}</Button></section>}
 
     {discovery.error && <div className="notice" role="alert"><p>{discovery.error}</p><p className="mt-1 text-xs text-muted">Os dados já carregados continuam visíveis.</p>{discovery.runId && <Button variant="outline" size="sm" className="mt-3" disabled={discovery.loading} onClick={discovery.refresh}>Tentar atualizar</Button>}</div>}
 
@@ -84,9 +88,9 @@ export default function DiscoveryWorkspace(): JSX.Element {
       {!busy && <Button variant="outline" size="sm" className="mt-4" onClick={() => void discovery.reanalyze()}>Reanalisar projeto</Button>}
     </section>}
 
-    {run && <SourceMonitor key={run.id} run={run} reanalyzing={busy} onReanalyze={() => void discovery.reanalyze()} />}
+    {run && <SourceMonitor key={run.id} scope={source?.scope} run={run} reanalyzing={busy} onReanalyze={() => void discovery.reanalyze()} />}
 
-    {!run && !discovery.loading && !discovery.starting && <section className="grid gap-4 sm:grid-cols-3" aria-label="Como explorar">
+    {!source && !run && !discovery.loading && !discovery.starting && <section className="grid gap-4 sm:grid-cols-3" aria-label="Como explorar">
       {[
         ["01", "Comece pelo que está construindo", "O contexto vem do repositório público e do README disponível."],
         ["02", "Siga as conexões", "Leia a contribuição sugerida e os trechos do projeto e do artigo."],
